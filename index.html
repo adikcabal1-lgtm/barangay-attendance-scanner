@@ -94,7 +94,7 @@
 <div class="container">
 <iframe
   id="backendFrame"
-  src="YOUR_APPS_SCRIPT_WEB_APP_URL"
+  src="https://script.google.com/macros/s/AKfycbxoFNv74WavxBq3Nu6c_8Gj1Rrsx99C4k4Tj0IhdqACEFHO-01thCTx23KFeNy2o8UsrA/exec"
   style="
     width:1px;
     height:1px;
@@ -294,26 +294,89 @@ function recordAttendance(
   );
 
 
-  /*
-   * We will connect this to Apps Script
-   * in the next step.
-   */
-
-  console.log({
-    token: token,
-    pin: pin,
-    trainingId: trainingId,
-    trainingName: trainingName
-  });
+  const backend =
+    document.getElementById(
+      'backendFrame'
+    );
 
 
-  showMessage(
-    'QR detected. Backend connection will be added next.',
-    'success'
+  if (
+    !backend ||
+    !backend.contentWindow
+  ) {
+
+    showMessage(
+      'Attendance backend is not available.',
+      'error'
+    );
+
+    return;
+  }
+
+
+  backend.contentWindow.postMessage(
+
+    {
+      type:
+        'SCAN_ATTENDANCE',
+
+      token:
+        token,
+
+      trainingId:
+        trainingId,
+
+      trainingName:
+        trainingName
+
+    },
+
+    '*'
+
   );
 
 }
 
+  window.addEventListener(
+  'message',
+  function(event) {
+
+    if (
+      !event.data
+    ) {
+      return;
+    }
+
+
+    if (
+      event.data.type ===
+      'ATTENDANCE_RESULT'
+    ) {
+
+      displayAttendanceResult(
+        event.data.result
+      );
+
+      return;
+    }
+
+
+    if (
+      event.data.type ===
+      'ATTENDANCE_ERROR'
+    ) {
+
+      showMessage(
+        '❌ ' +
+        event.data.message,
+        'error'
+      );
+
+      return;
+    }
+
+  }
+);
 
 function showMessage(
   message,
