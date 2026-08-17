@@ -388,7 +388,45 @@ function showMessage(
 
 }
 
+  window.addEventListener(
+  'message',
+  function(event) {
+
+    if (!event.data) {
+      return;
+    }
+
+    if (
+      event.data.type ===
+      'ATTENDANCE_RESULT'
+    ) {
+
+      displayAttendanceResult(
+        event.data.result
+      );
+
+      return;
+    }
+
+    if (
+      event.data.type ===
+      'ATTENDANCE_ERROR'
+    ) {
+
+      showMessage(
+        '❌ ' +
+        event.data.message,
+        'error'
+      );
+
+      return;
+    }
+
+  }
+);
+  
 </script>
 
 </body>
+  
 </html>
