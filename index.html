@@ -293,12 +293,10 @@ function recordAttendance(
     'warning'
   );
 
-
   const backend =
     document.getElementById(
       'backendFrame'
     );
-
 
   if (
     !backend ||
@@ -313,21 +311,16 @@ function recordAttendance(
     return;
   }
 
-
   backend.contentWindow.postMessage(
 
     {
-      type:
-        'SCAN_ATTENDANCE',
+      type: 'SCAN_ATTENDANCE',
 
-      token:
-        token,
+      token: token,
 
-      trainingId:
-        trainingId,
+      trainingId: trainingId,
 
-      trainingName:
-        trainingName
+      trainingName: trainingName
 
     },
 
