@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+
+<title>
+Attendance Dashboard
+</title>
+
+
+<style>
+
+* {
+
+  box-sizing:
+    border-box;
+
+}
+
+
+body {
+
+  margin:
+    0;
+
+  font-family:
+    Arial,
+    sans-serif;
+
+  background:
+    #f4f6f8;
+
+  color:
+    #222;
+
+}
+
+
+.header {
+
+  background:
+    #111;
+
+  color:
+    white;
+
+  text-align:
+    center;
+
+  padding:
+    25px 15px;
+
+}
+
+
+.header h1 {
+
+  margin:
+    0;
+
+  font-size:
+    25px;
+
+}
+
+
+.header p {
+
+  margin:
+    8px 0 0;
+
+  font-size:
+    14px;
+
+}
+
+
+.container {
+
+  max-width:
+    1100px;
+
+  margin:
+    auto;
+
+  padding:
+    20px;
+
+}
+
+
+/* ============================================================
+   STAT CARDS
+============================================================ */
+
+.stats {
+
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      4,
+      1fr
+    );
+
+  gap:
+    15px;
+
+  margin-bottom:
+    20px;
+
+}
+
+
+.stat {
+
+  background:
+    white;
+
+  border-radius:
+    12px;
+
+  padding:
+    20px;
+
+  text-align:
+    center;
+
+  box-shadow:
+    0 3px 12px
+    rgba(
+      0,
+      0,
+      0,
+      0.08
+    );
+
+}
+
+
+.stat-title {
+
+  font-size:
+    13px;
+
+  color:
+    #666;
+
+}
+
+
+.stat-number {
+
+  font-size:
+    30px;
+
+  font-weight:
+    bold;
+
+  margin-top:
+    8px;
+
+}
+
+
+/* ============================================================
+   CONTROLS
+============================================================ */
+
+.controls {
+
+  background:
+    white;
+
+  padding:
+    15px;
+
+  border-radius:
+    12px;
+
+  margin-bottom:
+    15px;
+
+  display:
+    flex;
+
+  gap:
+    10px;
+
+}
+
+
+.search {
+
+  flex:
+    1;
+
+  padding:
+    12px;
+
+  border:
+    1px solid
+    #ccc;
+
+  border-radius:
+    7px;
+
+  font-size:
+    15px;
+
+}
+
+
+button {
+
+  padding:
+    12px 18px;
+
+  border:
+    none;
+
+  border-radius:
+    7px;
+
+  background:
+    #111;
+
+  color:
+    white;
+
+  cursor:
+    pointer;
+
+}
+
+
+button:hover {
+
+  opacity:
+    0.85;
+
+}
+
+
+/* ============================================================
+   TABLE
+============================================================ */
+
+.table-container {
+
+  background:
+    white;
+
+  border-radius:
+    12px;
+
+  overflow:
+    auto;
+
+  box-shadow:
+    0 3px 12px
+    rgba(
+      0,
+      0,
+      0,
+      0.08
+    );
+
+}
+
+
+table {
+
+  width:
+    100%;
+
+  border-collapse:
+    collapse;
+
+}
+
+
+th {
+
+  background:
+    #111;
+
+  color:
+    white;
+
+  padding:
+    13px;
+
+  text-align:
+    left;
+
+  font-size:
+    13px;
+
+  position:
+    sticky;
+
+  top:
+    0;
+
+}
+
+
+td {
+
+  padding:
+    12px;
+
+  border-bottom:
+    1px solid
+    #eee;
+
+  font-size:
+    14px;
+
+}
+
+
+.present {
+
+  color:
+    #16852b;
+
+  font-weight:
+    bold;
+
+}
+
+
+.absent {
+
+  color:
+    #c62828;
+
+  font-weight:
+    bold;
+
+}
+
+
+.status-message {
+
+  text-align:
+    center;
+
+  padding:
+    30px;
+
+}
+
+
+.last-updated {
+
+  text-align:
+    right;
+
+  color:
+    #777;
+
+  font-size:
+    12px;
+
+  margin-top:
+    10px;
+
+}
+
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (
+  max-width: 750px
+) {
+
+  .stats {
+
+    grid-template-columns:
+      repeat(
+        2,
+        1fr
+      );
+
+  }
+
+
+  .controls {
+
+    flex-direction:
+      column;
+
+  }
+
+
+  .table-container {
+
+    overflow-x:
+      auto;
+
+  }
+
+
+  table {
+
+    min-width:
+      850px;
+
+  }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="header">
+
+<h1>
+ATTENDANCE DASHBOARD
+</h1>
+
+<p>
+Live Participant Attendance Monitoring
+</p>
+
+</div>
+
+
+<div class="container">
+
+
+<!-- ==========================================================
+     STATISTICS
+=========================================================== -->
+
+<div class="stats">
+
+
+<div class="stat">
+
+<div class="stat-title">
+TOTAL REGISTERED
+</div>
+
+<div
+  id="totalRegistered"
+  class="stat-number"
+>
+-
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-title">
+TOTAL ATTENDED
+</div>
+
+<div
+  id="totalAttended"
+  class="stat-number"
+>
+-
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-title">
+NOT YET ATTENDED
+</div>
+
+<div
+  id="totalAbsent"
+  class="stat-number"
+>
+-
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-title">
+ATTENDANCE RATE
+</div>
+
+<div
+  id="attendancePercentage"
+  class="stat-number"
+>
+-
+</div>
+
+</div>
+
+
+</div>
+
+
+<!-- ==========================================================
+     CONTROLS
+=========================================================== -->
+
+<div class="controls">
+
+<input
+  id="search"
+  class="search"
+  type="text"
+  placeholder="Search name, barangay, position or participant ID..."
+>
+
+
+<button
+  onclick="loadDashboard()"
+>
+REFRESH
+</button>
+
+</div>
+
+
+<!-- ==========================================================
+     TABLE
+=========================================================== -->
+
+<div class="table-container">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>
+Participant ID
+</th>
+
+<th>
+Full Name
+</th>
+
+<th>
+Barangay
+</th>
+
+<th>
+Position
+</th>
+
+<th>
+Status
+</th>
+
+<th>
+Attendance Time
+</th>
+
+</tr>
+
+</thead>
+
+
+<tbody
+  id="participantTable"
+>
+
+<tr>
+
+<td
+  colspan="6"
+  class="status-message"
+>
+Loading...
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<div
+  id="lastUpdated"
+  class="last-updated"
+>
+</div>
+
+
+</div>
+
+
+<script>
+
+
+/* ============================================================
+   APPS SCRIPT URL
+============================================================ */
+
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbxT2If3Bsjxg_kUJPtUOwhChHocZe-lXkXX1klwXGKlw2EeNigxwTUpXEVWLolUdirs/exec";
+
+
+let participants = [];
+
+
+/* ============================================================
+   LOAD DASHBOARD
+============================================================ */
+
+function loadDashboard() {
+
+  const callbackName =
+    "dashboardCallback_" +
+    Date.now();
+
+
+  const url =
+    API_URL +
+    "?action=dashboard" +
+    "&callback=" +
+    callbackName;
+
+
+  let script = null;
+
+
+  window[callbackName] =
+    function(result) {
+
+      handleDashboardResult(
+        result
+      );
+
+
+      cleanup(
+        callbackName,
+        script
+      );
+
+    };
+
+
+  script =
+    document.createElement(
+      "script"
+    );
+
+
+  script.src =
+    url;
+
+
+  script.onerror =
+    function() {
+
+      showError(
+        "Unable to connect to the attendance system."
+      );
+
+
+      cleanup(
+        callbackName,
+        script
+      );
+
+    };
+
+
+  document.body.appendChild(
+    script
+  );
+
+}
+
+
+/* ============================================================
+   HANDLE RESULT
+============================================================ */
+
+function handleDashboardResult(
+  result
+) {
+
+  if (
+    !result ||
+    !result.success
+  ) {
+
+    showError(
+      result &&
+      result.message
+        ? result.message
+        : "Unable to load dashboard."
+    );
+
+    return;
+
+  }
+
+
+  participants =
+    result.participants ||
+    [];
+
+
+  document.getElementById(
+    "totalRegistered"
+  ).textContent =
+    result.totalRegistered;
+
+
+  document.getElementById(
+    "totalAttended"
+  ).textContent =
+    result.totalAttended;
+
+
+  document.getElementById(
+    "totalAbsent"
+  ).textContent =
+    result.totalAbsent;
+
+
+  document.getElementById(
+    "attendancePercentage"
+  ).textContent =
+    result.attendancePercentage +
+    "%";
+
+
+  document.getElementById(
+    "lastUpdated"
+  ).textContent =
+    "Last updated: " +
+    formatDate(
+      result.generatedAt
+    );
+
+
+  renderTable(
+    participants
+  );
+
+}
+
+
+/* ============================================================
+   RENDER TABLE
+============================================================ */
+
+function renderTable(
+  list
+) {
+
+  const tbody =
+    document.getElementById(
+      "participantTable"
+    );
+
+
+  if (
+    list.length === 0
+  ) {
+
+    tbody.innerHTML =
+
+      '<tr>' +
+
+      '<td colspan="6" class="status-message">' +
+
+      'No participants found.' +
+
+      '</td>' +
+
+      '</tr>';
+
+    return;
+
+  }
+
+
+  tbody.innerHTML =
+    "";
+
+
+  list.forEach(
+    function(participant) {
+
+      const row =
+        document.createElement(
+          "tr"
+        );
+
+
+      const statusClass =
+        participant.status ===
+        "PRESENT"
+
+          ? "present"
+
+          : "absent";
+
+
+      const attendanceTime =
+        participant.timestamp
+          ? formatDate(
+              participant.timestamp
+            )
+          : "—";
+
+
+      row.innerHTML =
+
+        "<td>" +
+
+        escapeHtml(
+          participant.participantId
+        ) +
+
+        "</td>" +
+
+        "<td>" +
+
+        escapeHtml(
+          participant.fullName
+        ) +
+
+        "</td>" +
+
+        "<td>" +
+
+        escapeHtml(
+          participant.barangay
+        ) +
+
+        "</td>" +
+
+        "<td>" +
+
+        escapeHtml(
+          participant.position
+        ) +
+
+        "</td>" +
+
+        '<td class="' +
+        statusClass +
+        '">' +
+
+        escapeHtml(
+          participant.status
+        ) +
+
+        "</td>" +
+
+        "<td>" +
+
+        escapeHtml(
+          attendanceTime
+        ) +
+
+        "</td>";
+
+
+      tbody.appendChild(
+        row
+      );
+
+    }
+  );
+
+}
+
+
+/* ============================================================
+   SEARCH
+============================================================ */
+
+document
+  .getElementById(
+    "search"
+  )
+  .addEventListener(
+    "input",
+    function() {
+
+      const query =
+        this.value
+          .toLowerCase()
+          .trim();
+
+
+      if (
+        !query
+      ) {
+
+        renderTable(
+          participants
+        );
+
+        return;
+
+      }
+
+
+      const filtered =
+        participants.filter(
+          function(participant) {
+
+            return (
+
+              String(
+                participant.participantId
+              )
+                .toLowerCase()
+                .includes(
+                  query
+                )
+
+              ||
+
+              String(
+                participant.fullName
+              )
+                .toLowerCase()
+                .includes(
+                  query
+                )
+
+              ||
+
+              String(
+                participant.barangay
+              )
+                .toLowerCase()
+                .includes(
+                  query
+                )
+
+              ||
+
+              String(
+                participant.position
+              )
+                .toLowerCase()
+                .includes(
+                  query
+                )
+
+              ||
+
+              String(
+                participant.status
+              )
+                .toLowerCase()
+                .includes(
+                  query
+                )
+
+            );
+
+          }
+        );
+
+
+      renderTable(
+        filtered
+      );
+
+    }
+  );
+
+
+/* ============================================================
+   FORMAT DATE
+============================================================ */
+
+function formatDate(
+  value
+) {
+
+  if (
+    !value
+  ) {
+
+    return "—";
+
+  }
+
+
+  const date =
+    new Date(
+      value
+    );
+
+
+  if (
+    isNaN(
+      date.getTime()
+    )
+  ) {
+
+    return String(
+      value
+    );
+
+  }
+
+
+  return date.toLocaleString(
+    undefined,
+    {
+
+      year:
+        "numeric",
+
+      month:
+        "short",
+
+      day:
+        "numeric",
+
+      hour:
+        "numeric",
+
+      minute:
+        "2-digit",
+
+      second:
+        "2-digit"
+
+    }
+  );
+
+}
+
+
+/* ============================================================
+   ERROR
+============================================================ */
+
+function showError(
+  message
+) {
+
+  document.getElementById(
+    "participantTable"
+  ).innerHTML =
+
+    '<tr>' +
+
+    '<td colspan="6" class="status-message">' +
+
+    escapeHtml(
+      message
+    ) +
+
+    '</td>' +
+
+    '</tr>';
+
+}
+
+
+/* ============================================================
+   CLEAN JSONP
+============================================================ */
+
+function cleanup(
+  callbackName,
+  script
+) {
+
+  try {
+
+    delete window[
+      callbackName
+    ];
+
+  } catch (e) {}
+
+
+  if (
+    script &&
+    script.parentNode
+  ) {
+
+    script.parentNode.removeChild(
+      script
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   ESCAPE HTML
+============================================================ */
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+/* ============================================================
+   INITIAL LOAD
+============================================================ */
+
+window.addEventListener(
+  "load",
+  loadDashboard
+);
+
+</script>
+
+
+</body>
+
+</html>
