@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+
+<title>
+Attendance Checker
+</title>
+
+
+<script
+  src="https://unpkg.com/html5-qrcode"
+></script>
+
+
+<style>
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+
+  margin: 0;
+
+  font-family:
+    Arial,
+    sans-serif;
+
+  background:
+    #f4f6f8;
+
+  color:
+    #222;
+
+}
+
+.header {
+
+  background:
+    #111;
+
+  color:
+    white;
+
+  text-align:
+    center;
+
+  padding:
+    22px;
+
+}
+
+.header h1 {
+
+  margin:
+    0;
+
+  font-size:
+    23px;
+
+}
+
+.header p {
+
+  margin:
+    7px 0 0;
+
+  font-size:
+    14px;
+
+}
+
+.container {
+
+  width:
+    100%;
+
+  max-width:
+    500px;
+
+  margin:
+    auto;
+
+  padding:
+    20px;
+
+}
+
+.scanner-box {
+
+  background:
+    white;
+
+  border-radius:
+    15px;
+
+  padding:
+    15px;
+
+  box-shadow:
+    0 4px 15px
+    rgba(0,0,0,0.12);
+
+}
+
+#reader {
+
+  width:
+    100%;
+
+}
+
+.status {
+
+  margin-top:
+    20px;
+
+  padding:
+    20px;
+
+  border-radius:
+    12px;
+
+  background:
+    white;
+
+  text-align:
+    center;
+
+}
+
+.status.success {
+
+  background:
+    #dff5e1;
+
+}
+
+.status.warning {
+
+  background:
+    #fff0c2;
+
+}
+
+.status.error {
+
+  background:
+    #ffe0e0;
+
+}
+
+.status.info {
+
+  background:
+    #e7f1ff;
+
+}
+
+.status h2 {
+
+  margin:
+    0 0 10px;
+
+}
+
+.name {
+
+  font-size:
+    21px;
+
+  font-weight:
+    bold;
+
+  margin-bottom:
+    10px;
+
+}
+
+.info {
+
+  font-size:
+    14px;
+
+  margin:
+    5px;
+
+}
+
+button {
+
+  border:
+    none;
+
+  border-radius:
+    8px;
+
+  padding:
+    12px 20px;
+
+  margin-top:
+    15px;
+
+  background:
+    #111;
+
+  color:
+    white;
+
+  font-size:
+    15px;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="header">
+
+<h1>
+ATTENDANCE CHECKER
+</h1>
+
+<p>
+Scan Participant QR Code
+</p>
+
+</div>
+
+
+<div class="container">
+
+
+<div class="scanner-box">
+
+<div id="reader"></div>
+
+</div>
+
+
+<div
+  id="status"
+  class="status info"
+>
+
+<h2>
+READY
+</h2>
+
+<p>
+Allow camera access and scan a QR code.
+</p>
+
+</div>
+
+
+</div>
+
+
+<script>
+
+
+/*
+==============================================================
+IMPORTANT
+==============================================================
+
+PASTE YOUR APPS SCRIPT /exec URL BETWEEN THE QUOTES BELOW.
+
+Example:
+
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbxT2If3Bsjxg_kUJPtUOwhChHocZe-lXkXX1klwXGKlw2EeNigxwTUpXEVWLolUdirs/exec";
+
+==============================================================
+*/
+
+
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbxT2If3Bsjxg_kUJPtUOwhChHocZe-lXkXX1klwXGKlw2EeNigxwTUpXEVWLolUdirs/exec";
+
+
+let scanner = null;
+
+let processing = false;
+
+
+/* ============================================================
+   START CAMERA
+============================================================ */
+
+function startScanner() {
+
+  if (
+    !window.isSecureContext
+  ) {
+
+    showStatus(
+      "error",
+      "SECURITY ERROR",
+      "The scanner must be opened through HTTPS."
+    );
+
+    return;
+  }
+
+
+  if (
+    !navigator.mediaDevices ||
+    !navigator.mediaDevices.getUserMedia
+  ) {
+
+    showStatus(
+      "error",
+      "CAMERA NOT SUPPORTED",
+      "Your browser does not support camera access."
+    );
+
+    return;
+  }
+
+
+  scanner =
+    new Html5Qrcode(
+      "reader"
+    );
+
+
+  scanner.start(
+
+    {
+      facingMode:
+        "environment"
+    },
+
+    {
+
+      fps:
+        10,
+
+      qrbox:
+        {
+          width:
+            250,
+
+          height:
+            250
+        }
+
+    },
+
+    function(decodedText) {
+
+      handleQRCode(
+        decodedText
+      );
+
+    },
+
+    function(errorMessage) {
+
+      /*
+       * Normal QR scanning failures
+       * are ignored.
+       */
+
+    }
+
+  )
+
+  .then(function() {
+
+    showStatus(
+      "info",
+      "READY",
+      "Scan a participant QR code."
+    );
+
+  })
+
+  .catch(function(error) {
+
+    showStatus(
+      "error",
+      "CAMERA ERROR",
+      error.name +
+      ": " +
+      error.message
+    );
+
+  });
+
+}
+
+
+/* ============================================================
+   HANDLE QR
+============================================================ */
+
+function handleQRCode(
+  participantId
+) {
+
+  if (
+    processing
+  ) {
+
+    return;
+  }
+
+
+  participantId =
+    String(
+      participantId
+    ).trim();
+
+
+  if (
+    !participantId
+  ) {
+
+    return;
+  }
+
+
+  processing =
+    true;
+
+
+  showStatus(
+    "info",
+    "CHECKING...",
+    "Verifying participant..."
+  );
+
+
+  /*
+   * Create a unique callback name.
+   */
+
+  const callbackName =
+    "attendanceCallback_" +
+    Date.now();
+
+
+  /*
+   * Create the Apps Script URL.
+   */
+
+  const url =
+    API_URL +
+    "?action=scan" +
+    "&id=" +
+    encodeURIComponent(
+      participantId
+    ) +
+    "&callback=" +
+    callbackName;
+
+
+  /*
+   * Create JSONP callback.
+   */
+
+  window[callbackName] =
+    function(result) {
+
+      handleResult(
+        result
+      );
+
+
+      cleanupJsonp(
+        callbackName,
+        script
+      );
+
+    };
+
+
+  /*
+   * Create script element.
+   */
+
+  const script =
+    document.createElement(
+      "script"
+    );
+
+
+  script.src =
+    url;
+
+
+  script.onerror =
+    function() {
+
+      handleError(
+        "Unable to contact the attendance server."
+      );
+
+
+      cleanupJsonp(
+        callbackName,
+        script
+      );
+
+    };
+
+
+  document.body.appendChild(
+    script
+  );
+
+}
+
+
+/* ============================================================
+   CLEAN JSONP
+============================================================ */
+
+function cleanupJsonp(
+  callbackName,
+  script
+) {
+
+  try {
+
+    delete window[
+      callbackName
+    ];
+
+  } catch (e) {}
+
+
+  if (
+    script &&
+    script.parentNode
+  ) {
+
+    script.parentNode.removeChild(
+      script
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   RESULT
+============================================================ */
+
+function handleResult(
+  result
+) {
+
+  if (
+    !result
+  ) {
+
+    handleError(
+      "No response received."
+    );
+
+    return;
+  }
+
+
+  if (
+    result.result ===
+    "SUCCESS"
+  ) {
+
+    showStatus(
+
+      "success",
+
+      "✓ ATTENDANCE RECORDED",
+
+      participantInfo(
+        result
+      )
+
+    );
+
+  }
+
+  else if (
+    result.result ===
+    "ALREADY RECORDED"
+  ) {
+
+    showStatus(
+
+      "warning",
+
+      "⚠ ALREADY RECORDED",
+
+      participantInfo(
+        result
+      )
+
+    );
+
+  }
+
+  else if (
+    result.result ===
+    "INVALID"
+  ) {
+
+    showStatus(
+
+      "error",
+
+      "✕ INVALID QR CODE",
+
+      result.message
+
+    );
+
+  }
+
+  else {
+
+    handleError(
+      result.message ||
+      "Unknown server error."
+    );
+
+  }
+
+
+  /*
+   * Prepare for another scan.
+   */
+
+  setTimeout(
+    resetScanner,
+    2500
+  );
+
+}
+
+
+/* ============================================================
+   PARTICIPANT INFO
+============================================================ */
+
+function participantInfo(
+  result
+) {
+
+  return (
+
+    '<div class="name">' +
+
+    escapeHtml(
+      result.fullName
+    ) +
+
+    '</div>' +
+
+    '<div class="info">' +
+
+    'Barangay: ' +
+
+    escapeHtml(
+      result.barangay
+    ) +
+
+    '</div>' +
+
+    '<div class="info">' +
+
+    'Position: ' +
+
+    escapeHtml(
+      result.position
+    ) +
+
+    '</div>' +
+
+    '<div class="info">' +
+
+    'ID: ' +
+
+    escapeHtml(
+      result.participantId
+    ) +
+
+    '</div>'
+
+  );
+
+}
+
+
+/* ============================================================
+   ERROR
+============================================================ */
+
+function handleError(
+  message
+) {
+
+  showStatus(
+    "error",
+    "SYSTEM ERROR",
+    message
+  );
+
+
+  setTimeout(
+    resetScanner,
+    3000
+  );
+
+}
+
+
+/* ============================================================
+   STATUS
+============================================================ */
+
+function showStatus(
+  type,
+  title,
+  message
+) {
+
+  const status =
+    document.getElementById(
+      "status"
+    );
+
+
+  status.className =
+    "status " +
+    type;
+
+
+  status.innerHTML =
+
+    "<h2>" +
+    title +
+    "</h2>" +
+
+    "<div>" +
+    message +
+    "</div>";
+
+}
+
+
+/* ============================================================
+   RESET
+============================================================ */
+
+function resetScanner() {
+
+  processing =
+    false;
+
+
+  showStatus(
+    "info",
+    "READY",
+    "Scan a participant QR code."
+  );
+
+}
+
+
+/* ============================================================
+   ESCAPE HTML
+============================================================ */
+
+function escapeHtml(
+  value
+) {
+
+  return String(value)
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+/* ============================================================
+   START
+============================================================ */
+
+window.addEventListener(
+  "load",
+  startScanner
+);
+
+</script>
+
+
+</body>
+
+</html>
